@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity >=0.6.6 <0.9.0;
+pragma solidity ^0.8.0 ;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Detailed.sol";
-
-contract AirdropContract {
+contract AirDropContract {
 
    mapping(address => bool) public confirmedForDrop;
 
@@ -13,44 +10,51 @@ contract AirdropContract {
     address[] reciever;
     uint256 deadline;
 
-    constructor() public {
+    constructor()  {
         admin = msg.sender;
+        deadline = block.timestamp + 2 minutes ; // 2 minutes is for testing purposes. now keyword is depreciated, block.timestamp is standard as of 0.7.0
+    }
+
+    function fundAirDrop() public payable onlyAdmin{
+      require(msg.value >= 1000000000000000000, "A minimum of 10 eth needed");
     }
 
     function AddAddress() public {
-        require(!confirmedForDrop[admin]==true);
-        //require()
+        require(msg.sender!=admin,"Admin cannot be added to droplist");
+
         reciever.push(msg.sender);
+        confirmedForDrop[msg.sender] = true;
     }
 
-    function setAirDropDate(uint256 numberOfMins) public {
-         deadline = now + (numberOfMins * 1 minutes);
+    function changeAirDropDate(uint256 numberOfMins) public onlyAdmin {
+         deadline = block.timestamp + (numberOfMins * 1 minutes);
     }
 
     function getTimeUntilAirDrop() public view returns (uint256){
-      if (deadline <= now){ // Checks to see if its time to check in.
+      if (deadline <= block.timestamp){ 
         return 0;
       } else {
-        return deadline - now; // Returns amount of seconds remaining until next check in.
+        return deadline - block.timestamp; // Returns amount of seconds remaining until next check in. 
       } 
     }
     
 
-    modifier onlyAdmin() { // This modifier authorizes only the owner of the contract to execute whichever function utilizes this modifier.
+    modifier onlyAdmin() { 
         require(msg.sender == admin);
         _;
     }
 
-    function airdropTokens() public payable onlyAdmin {
-        require(now >= deadline);
-        ERC20 erc20token = ERC20(token);
+    function airdropTokens() public onlyAdmin {
+        require(block.timestamp >= deadline);
         
         for(uint i = 0; i< reciever.length; i++)
         {
-          
-            erc20token.transferFrom(msg.sender, reciever[i], 10000000);
-            
-            
+          address payable recipient = payable(reciever[i]); //address payable: Same as address, but with the additional members transfer and send. Hence the need for typecasting.
+          recipient.transfer(1000000);   
         }
+    }
+
+    function check(address r) public view returns (bool) {
+      return confirmedForDrop[r];
     }
 }
