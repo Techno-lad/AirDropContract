@@ -23,7 +23,7 @@ contract AirDropContract {
         require(msg.sender!=admin,"Admin cannot be added to droplist");
 
         reciever.push(msg.sender);
-        confirmedForDrop[msg.sender] = true;
+        confirmedForDrop[msg.sender] = true; // addresses that signs up for airdrop are "marked" true;
     }
 
     function changeAirDropDate(uint256 numberOfMins) public onlyAdmin {
